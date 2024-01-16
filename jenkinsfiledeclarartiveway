@@ -1,0 +1,58 @@
+pipeline{
+
+agent any
+
+tools{
+maven "maven3.9.6"
+}
+
+stages{
+
+//checkout code 
+stage('checkoutcode')
+{
+steps{
+git branch: 'development', credentialsId: '08363382-88b7-459f-bb31-4be930642404', url: 'https://github.com/Mavenlearning/maven-web-application.git'	
+}
+}
+
+//build maven code
+stage('buildcode')
+{
+steps{
+sh "mvn clean package"
+}
+}
+
+//execute code in sonar
+stage('executecodeinsonar')
+{
+steps{
+sh "mvn sonar:sonar"
+}
+}
+
+//upload in artifactory in nexus
+stage('uploadartiinnexus')
+{
+steps{
+sh "mvn deploy"
+}
+}
+
+
+//deploy code in tomcat
+stage('deploycodeintomcat')
+{
+steps{
+sshagent(['22196197-cfc1-4764-9dfd-3d9663168082']) {
+    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.47.67:/opt/apache-tomcat-9.0.84/webapps"
+}
+}
+}
+
+
+}//stages closing
+}//pipeline closing
+
+
